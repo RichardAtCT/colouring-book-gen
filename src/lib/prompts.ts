@@ -2,11 +2,11 @@ import type { AgeRange } from "@/types";
 
 const AGE_COMPLEXITY: Record<AgeRange, string> = {
   "2-4":
-    "Very simple shapes, extra thick bold outlines, minimal detail, large areas to colour",
+    "Very simple shapes, extra thick bold outlines, minimal detail, large areas to colour. Suitable for toddlers.",
   "5-7":
-    "Simple but recognisable shapes, thick outlines, moderate detail, clear defined areas",
+    "Simple but recognisable shapes, thick outlines, moderate detail, clear defined areas. Suitable for young children.",
   "8-12":
-    "Detailed illustration, medium-weight outlines, intricate patterns allowed",
+    "More detailed illustration, medium-weight outlines, intricate patterns allowed. Suitable for older children.",
 };
 
 export function buildSystemPrompt(
@@ -15,5 +15,17 @@ export function buildSystemPrompt(
 ): string {
   const complexity = AGE_COMPLEXITY[ageRange];
 
-  return `Children's colouring book page. Black line art on pure white background. Clean outlines only. No shading, no gradients, no grey tones, no colour fill, no watermarks. ${complexity}. Subject: ${userPrompt} Style: Friendly, age-appropriate cartoon illustration suitable for a printed colouring book. The image should fill the page with the subject centred.`;
+  return [
+    "Children's colouring book page.",
+    "Black-and-white line art with no shading, no grayscale, and no colour.",
+    "Minimal, cartoonish style. Clean, bold outlines. Avoid intricate detail or fine textures.",
+    "The background should be mostly blank or very simple, to leave room for colouring.",
+    "Avoid any filled areas — everything should be outlined only.",
+    "Do not include realistic rendering, gradients, or 3D effects.",
+    "If any text appears in the image, it must be simple, outlined, cartoonish, and fully legible.",
+    "The final image should resemble a classic colouring book page.",
+    `Age range: ${ageRange}. ${complexity}.`,
+    `Subject: ${userPrompt}`,
+    "The subject should be centred and fill the page. Friendly, age-appropriate cartoon illustration suitable for printing.",
+  ].join(" ");
 }

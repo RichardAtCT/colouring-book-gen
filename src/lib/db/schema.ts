@@ -4,47 +4,9 @@ export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
   email: text("email").unique().notNull(),
   name: text("name"),
-  emailVerified: integer("email_verified", { mode: "timestamp" }),
-  image: text("image"),
-  plan: text("plan", { enum: ["free", "pro", "creator"] })
-    .default("free")
-    .notNull(),
-  generationsToday: integer("generations_today").default(0).notNull(),
-  generationsThisMonth: integer("generations_this_month").default(0).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" })
     .$defaultFn(() => new Date())
     .notNull(),
-});
-
-export const accounts = sqliteTable("accounts", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  type: text("type").notNull(),
-  provider: text("provider").notNull(),
-  providerAccountId: text("provider_account_id").notNull(),
-  refresh_token: text("refresh_token"),
-  access_token: text("access_token"),
-  expires_at: integer("expires_at"),
-  token_type: text("token_type"),
-  scope: text("scope"),
-  id_token: text("id_token"),
-  session_state: text("session_state"),
-});
-
-export const sessions = sqliteTable("sessions", {
-  sessionToken: text("session_token").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  expires: integer("expires", { mode: "timestamp" }).notNull(),
-});
-
-export const verificationTokens = sqliteTable("verification_tokens", {
-  identifier: text("identifier").notNull(),
-  token: text("token").notNull(),
-  expires: integer("expires", { mode: "timestamp" }).notNull(),
 });
 
 export const generations = sqliteTable("generations", {
@@ -55,7 +17,7 @@ export const generations = sqliteTable("generations", {
   prompt: text("prompt").notNull(),
   systemPrompt: text("system_prompt").notNull(),
   ageRange: text("age_range", { enum: ["2-4", "5-7", "8-12"] }).notNull(),
-  provider: text("provider", { enum: ["openai", "flux"] }).notNull(),
+  provider: text("provider", { enum: ["openai"] }).notNull(),
   model: text("model").notNull(),
   quality: text("quality", { enum: ["low", "medium", "high"] })
     .default("low")
@@ -65,6 +27,9 @@ export const generations = sqliteTable("generations", {
   width: integer("width"),
   height: integer("height"),
   costUsd: real("cost_usd"),
+  inputTokens: integer("input_tokens"),
+  outputTokens: integer("output_tokens"),
+  durationMs: integer("duration_ms"),
   status: text("status", { enum: ["pending", "completed", "failed"] })
     .default("pending")
     .notNull(),

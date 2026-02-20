@@ -14,10 +14,44 @@ export interface GenerateResponse {
   prompt: string;
   ageRange: AgeRange;
   quality: QualityTier;
+  costUsd: number;
+  durationMs: number;
   createdAt: string;
 }
 
 export interface GenerateError {
   error: string;
   code: "RATE_LIMIT" | "INVALID_INPUT" | "GENERATION_FAILED" | "SERVER_ERROR";
+}
+
+export interface BookPagePrompt {
+  id: string;
+  pageNumber: number;
+  title: string;
+  prompt: string;
+}
+
+export type PageGenerationStatus = "pending" | "generating" | "done" | "failed";
+
+export interface BookPageGenerationState {
+  id: string;
+  pageNumber: number;
+  title: string;
+  prompt: string;
+  status: PageGenerationStatus;
+  generationId?: string;
+  imageUrl?: string;
+  error?: string;
+  costUsd?: number;
+}
+
+export interface BookCoverState {
+  id: string;
+  title: string;
+  prompt: string;
+  status: PageGenerationStatus;
+  generationId?: string;
+  imageUrl?: string;
+  error?: string;
+  costUsd?: number;
 }

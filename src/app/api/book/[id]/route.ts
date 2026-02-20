@@ -1,24 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and, asc } from "drizzle-orm";
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { books, bookPages, generations } from "@/lib/db/schema";
+import { getDefaultUserId } from "@/lib/default-user";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+  const userId = await getDefaultUserId();
   const { id } = await params;
 
   const bookResult = await db
     .select()
     .from(books)
-    .where(and(eq(books.id, id), eq(books.userId, session.user.id)))
+    .where(and(eq(books.id, id), eq(books.userId, userId)))
     .limit(1);
 
   const book = bookResult[0];
@@ -49,11 +45,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+  const userId = await getDefaultUserId();
   const { id } = await params;
   const body = await request.json();
 
@@ -61,7 +53,7 @@ export async function PUT(
   const bookResult = await db
     .select()
     .from(books)
-    .where(and(eq(books.id, id), eq(books.userId, session.user.id)))
+    .where(and(eq(books.id, id), eq(books.userId, userId)))
     .limit(1);
 
   if (!bookResult[0]) {
@@ -100,16 +92,12 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+  const userId = await getDefaultUserId();
   const { id } = await params;
 
   await db
     .delete(books)
-    .where(and(eq(books.id, id), eq(books.userId, session.user.id)));
+    .where(and(eq(books.id, id), eq(books.userId, userId)));
 
   return NextResponse.json({ success: true });
 }

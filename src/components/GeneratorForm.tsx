@@ -5,8 +5,10 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AgeRangeSelector } from "@/components/AgeRangeSelector";
+import { QualitySelector } from "@/components/QualitySelector";
 import { ImagePreview } from "@/components/ImagePreview";
-import type { AgeRange, GenerateResponse, GenerateError } from "@/types";
+import { formatCost } from "@/lib/costs";
+import type { AgeRange, QualityTier, GenerateResponse, GenerateError } from "@/types";
 
 const MAX_PROMPT_LENGTH = 500;
 
@@ -17,8 +19,10 @@ export function GeneratorForm() {
 
   const [prompt, setPrompt] = useState(initialPrompt);
   const [ageRange, setAgeRange] = useState<AgeRange>(initialAgeRange);
+  const [quality, setQuality] = useState<QualityTier>("low");
   const [isLoading, setIsLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [costUsd, setCostUsd] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const canSubmit = prompt.trim().length >= 3 && !isLoading;
@@ -30,12 +34,13 @@ export function GeneratorForm() {
     setIsLoading(true);
     setError(null);
     setImageUrl(null);
+    setCostUsd(null);
 
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: prompt.trim(), ageRange, quality: "low" }),
+        body: JSON.stringify({ prompt: prompt.trim(), ageRange, quality }),
       });
 
       const data: GenerateResponse | GenerateError = await response.json();
@@ -45,7 +50,9 @@ export function GeneratorForm() {
         return;
       }
 
-      setImageUrl((data as GenerateResponse).imageUrl);
+      const result = data as GenerateResponse;
+      setImageUrl(result.imageUrl);
+      setCostUsd(result.costUsd);
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -78,6 +85,15 @@ export function GeneratorForm() {
         <AgeRangeSelector
           value={ageRange}
           onChange={setAgeRange}
+          disabled={isLoading}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Quality</label>
+        <QualitySelector
+          value={quality}
+          onChange={setQuality}
           disabled={isLoading}
         />
       </div>
@@ -118,6 +134,11 @@ export function GeneratorForm() {
       )}
 
       <ImagePreview imageUrl={imageUrl} isLoading={isLoading} />
+      {costUsd != null && imageUrl && (
+        <p className="text-xs text-muted-foreground text-center">
+          Cost: {formatCost(costUsd)}
+        </p>
+      )}
     </form>
   );
 }

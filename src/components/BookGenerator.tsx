@@ -20,6 +20,7 @@ import type {
   PageGenerationStatus,
 } from "@/types";
 import { runWithConcurrency, PAGE_GENERATION_CONCURRENCY } from "@/lib/concurrency";
+import { formatCost } from "@/lib/costs";
 
 type Step = "concept" | "prompts" | "generating" | "complete";
 
@@ -194,7 +195,7 @@ export function BookGenerator() {
     prompt: string,
     age: AgeRange,
     qual: QualityTier,
-    onUpdate: (status: PageGenerationStatus, data?: Record<string, string>) => void
+    onUpdate: (status: PageGenerationStatus, data?: Record<string, string | number>) => void
   ): Promise<{ generationId?: string; imageUrl?: string }> => {
     onUpdate("generating");
 
@@ -221,7 +222,7 @@ export function BookGenerator() {
         }
 
         const data = await response.json();
-        onUpdate("done", { generationId: data.id, imageUrl: data.imageUrl });
+        onUpdate("done", { generationId: data.id, imageUrl: data.imageUrl, costUsd: data.costUsd });
         return { generationId: data.id, imageUrl: data.imageUrl };
       } catch {
         if (attempt < maxRetries) {
@@ -674,6 +675,16 @@ export function BookGenerator() {
                 </div>
               ))}
           </div>
+
+          {(() => {
+            const totalCost = (coverState?.costUsd ?? 0) + pageStates.reduce((sum, p) => sum + (p.costUsd ?? 0), 0);
+            const imageCount = (coverState?.imageUrl ? 1 : 0) + pageStates.filter((p) => p.imageUrl).length;
+            return totalCost > 0 ? (
+              <p className="text-xs text-muted-foreground text-center">
+                Total cost: {formatCost(totalCost)} ({imageCount} images)
+              </p>
+            ) : null;
+          })()}
 
           <div className="flex gap-3">
             <Button onClick={downloadPdf} disabled={!pdfUrl} size="lg" className="flex-1">

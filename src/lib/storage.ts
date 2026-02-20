@@ -1,57 +1,44 @@
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-} from "@aws-sdk/client-s3";
+import { mkdir, writeFile, readFile } from "fs/promises";
+import path from "path";
 
-const s3 = new S3Client({
-  region: "auto",
-  endpoint: process.env.R2_ENDPOINT ?? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID ?? "",
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY ?? "",
-  },
-});
-
-const BUCKET = process.env.R2_BUCKET_NAME ?? "colouring-pages";
-const PUBLIC_URL = process.env.R2_PUBLIC_URL ?? "";
+const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads");
 
 export async function uploadImage(
   buffer: Buffer,
   key: string,
-  contentType = "image/png"
+  _contentType = "image/png"
 ): Promise<string> {
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: BUCKET,
-      Key: key,
-      Body: buffer,
-      ContentType: contentType,
-    })
-  );
-
-  return `${PUBLIC_URL}/${key}`;
+  const filePath = path.join(UPLOADS_DIR, key);
+  await mkdir(path.dirname(filePath), { recursive: true });
+  await writeFile(filePath, buffer);
+  return `/uploads/${key}`;
 }
 
 export async function getImage(key: string): Promise<Buffer> {
-  const response = await s3.send(
-    new GetObjectCommand({
-      Bucket: BUCKET,
-      Key: key,
-    })
-  );
-
-  const stream = response.Body;
-  if (!stream) throw new Error("No body in S3 response");
-
-  const chunks: Uint8Array[] = [];
-  for await (const chunk of stream as AsyncIterable<Uint8Array>) {
-    chunks.push(chunk);
-  }
-  return Buffer.concat(chunks);
+  const filePath = path.join(UPLOADS_DIR, key);
+  return readFile(filePath);
 }
 
 export function generateImageKey(generationId: string, suffix = ""): string {
   const date = new Date().toISOString().slice(0, 10);
   return `generations/${date}/${generationId}${suffix}.png`;
+}
+
+/**
+ * Read image bytes from a data: URL, local /uploads/ path, or remote http URL.
+ */
+export async function readImageFromUrl(url: string): Promise<Buffer> {
+  if (url.startsWith("data:")) {
+    const base64 = url.split(",")[1];
+    return Buffer.from(base64!, "base64");
+  }
+
+  if (url.startsWith("/uploads/")) {
+    const filePath = path.join(process.cwd(), "public", url);
+    return readFile(filePath);
+  }
+
+  // Remote URL fallback
+  const response = await fetch(url);
+  return Buffer.from(await response.arrayBuffer());
 }

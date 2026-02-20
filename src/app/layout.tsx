@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Providers } from "@/components/Providers";
-import { AuthButton } from "@/components/AuthButton";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -18,45 +16,48 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <Providers>
-          <header className="border-b">
-            <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
-              <div className="flex items-center gap-6">
-                <Link href="/" className="text-lg font-semibold">
-                  Colouring Book Generator
+        <header className="border-b">
+          <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
+            <div className="flex items-center gap-6">
+              <Link href="/" className="text-lg font-semibold">
+                Colouring Book Generator
+              </Link>
+              <nav className="flex items-center gap-4 text-sm">
+                <Link
+                  href="/gallery"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Gallery
                 </Link>
-                <nav className="flex items-center gap-4 text-sm">
-                  <Link
-                    href="/gallery"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Gallery
-                  </Link>
-                  <Link
-                    href="/books"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Books
-                  </Link>
-                  <Link
-                    href="/templates"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Templates
-                  </Link>
-                  <Link
-                    href="/pricing"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Pricing
-                  </Link>
-                </nav>
-              </div>
-              <AuthButton />
+                <Link
+                  href="/books"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Books
+                </Link>
+                <Link
+                  href="/book/generate"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Generate Book
+                </Link>
+                <Link
+                  href="/templates"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Templates
+                </Link>
+                <Link
+                  href="/compare"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Compare
+                </Link>
+              </nav>
             </div>
-          </header>
-          <main className="mx-auto max-w-3xl px-4 py-8">{children}</main>
-        </Providers>
+          </div>
+        </header>
+        <main className="mx-auto max-w-3xl px-4 py-8">{children}</main>
       </body>
     </html>
   );

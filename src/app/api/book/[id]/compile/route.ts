@@ -1,27 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and, asc } from "drizzle-orm";
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { books, bookPages, generations } from "@/lib/db/schema";
 import { compileBook, type BookCompileOptions } from "@/lib/pdf";
-import { uploadImage } from "@/lib/storage";
+import { uploadImage, readImageFromUrl } from "@/lib/storage";
+import { getDefaultUserId } from "@/lib/default-user";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+  const userId = await getDefaultUserId();
   const { id } = await params;
 
   // Get book and verify ownership
   const bookResult = await db
     .select()
     .from(books)
-    .where(and(eq(books.id, id), eq(books.userId, session.user.id)))
+    .where(and(eq(books.id, id), eq(books.userId, userId)))
     .limit(1);
 
   const book = bookResult[0];
@@ -50,33 +46,36 @@ export async function POST(
   try {
     // Fetch all images
     const pageData = await Promise.all(
-      pages.map(async (page) => {
-        let imageBytes: Buffer;
-
-        if (page.imageUrl?.startsWith("data:")) {
-          // Base64 data URL
-          const base64 = page.imageUrl.split(",")[1];
-          imageBytes = Buffer.from(base64!, "base64");
-        } else {
-          // Fetch from URL (R2)
-          const response = await fetch(page.imageUrl!);
-          imageBytes = Buffer.from(await response.arrayBuffer());
-        }
-
-        return {
-          imageBytes,
-          pageNumber: page.pageNumber,
-        };
-      })
+      pages.map(async (page) => ({
+        imageBytes: await readImageFromUrl(page.imageUrl!),
+        pageNumber: page.pageNumber,
+      }))
     );
 
     // Parse compile options from request body
     const body = await request.json().catch(() => ({}));
+
+    // Fetch cover image if coverGenerationId provided
+    let coverImageBytes: Buffer | undefined;
+    if (body.coverGenerationId) {
+      const coverResult = await db
+        .select({ imageUrl: generations.imageUrl })
+        .from(generations)
+        .where(eq(generations.id, body.coverGenerationId))
+        .limit(1);
+
+      const coverGen = coverResult[0];
+      if (coverGen?.imageUrl) {
+        coverImageBytes = await readImageFromUrl(coverGen.imageUrl);
+      }
+    }
+
     const options: BookCompileOptions = {
       pageSize: body.pageSize ?? "A4",
       includePageNumbers: body.includePageNumbers ?? true,
       includeFooter: body.includeFooter ?? true,
       footerText: body.footerText ?? "Coloured by: ___________",
+      coverImageBytes,
     };
 
     // Compile PDF

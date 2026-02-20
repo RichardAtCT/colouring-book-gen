@@ -1,29 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, desc } from "drizzle-orm";
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { books, bookPages } from "@/lib/db/schema";
+import { getDefaultUserId } from "@/lib/default-user";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await getDefaultUserId();
 
   const userBooks = await db
     .select()
     .from(books)
-    .where(eq(books.userId, session.user.id))
+    .where(eq(books.userId, userId))
     .orderBy(desc(books.updatedAt));
 
   return NextResponse.json({ items: userBooks });
 }
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await getDefaultUserId();
 
   const body = await request.json();
   const { title, pages } = body;
@@ -39,7 +33,7 @@ export async function POST(request: NextRequest) {
 
   await db.insert(books).values({
     id: bookId,
-    userId: session.user.id,
+    userId,
     title,
     status: "draft",
   });

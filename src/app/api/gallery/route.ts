@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, desc, and, count } from "drizzle-orm";
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generations } from "@/lib/db/schema";
+import { getDefaultUserId } from "@/lib/default-user";
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await getDefaultUserId();
 
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1"));
@@ -17,12 +14,12 @@ export async function GET(request: NextRequest) {
 
   const where = favouritesOnly
     ? and(
-        eq(generations.userId, session.user.id),
+        eq(generations.userId, userId),
         eq(generations.status, "completed"),
         eq(generations.isFavourite, true)
       )
     : and(
-        eq(generations.userId, session.user.id),
+        eq(generations.userId, userId),
         eq(generations.status, "completed")
       );
 
@@ -49,10 +46,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await getDefaultUserId();
 
   const body = await request.json();
   const { id, isFavourite } = body;
@@ -65,17 +59,14 @@ export async function PATCH(request: NextRequest) {
     .update(generations)
     .set({ isFavourite })
     .where(
-      and(eq(generations.id, id), eq(generations.userId, session.user.id))
+      and(eq(generations.id, id), eq(generations.userId, userId))
     );
 
   return NextResponse.json({ success: true });
 }
 
 export async function DELETE(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await getDefaultUserId();
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
@@ -88,7 +79,7 @@ export async function DELETE(request: NextRequest) {
     .update(generations)
     .set({ status: "failed" })
     .where(
-      and(eq(generations.id, id), eq(generations.userId, session.user.id))
+      and(eq(generations.id, id), eq(generations.userId, userId))
     );
 
   return NextResponse.json({ success: true });

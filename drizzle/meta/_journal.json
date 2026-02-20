@@ -22,6 +22,27 @@
       "when": 1771568318109,
       "tag": "0002_red_namora",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1771589238147,
+      "tag": "0003_gifted_tiger_shark",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1771593008149,
+      "tag": "0004_condemned_gargoyle",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1771593115403,
+      "tag": "0005_eminent_the_watchers",
+      "breakpoints": true
     }
   ]
 }

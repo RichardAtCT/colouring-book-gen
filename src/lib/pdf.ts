@@ -10,6 +10,7 @@ export interface BookCompileOptions {
   includePageNumbers: boolean;
   includeFooter: boolean;
   footerText: string;
+  coverImageBytes?: Buffer;
 }
 
 export interface BookPageData {
@@ -29,26 +30,89 @@ export async function compileBook(
 
   // Cover page
   const coverPage = pdfDoc.addPage([width, height]);
-  const titleFontSize = 36;
-  const titleWidth = boldFont.widthOfTextAtSize(title, titleFontSize);
-  coverPage.drawText(title, {
-    x: (width - titleWidth) / 2,
-    y: height / 2 + 20,
-    size: titleFontSize,
-    font: boldFont,
-    color: rgb(0.15, 0.15, 0.15),
-  });
 
-  const subtitle = "A Colouring Book";
-  const subtitleSize = 16;
-  const subtitleWidth = font.widthOfTextAtSize(subtitle, subtitleSize);
-  coverPage.drawText(subtitle, {
-    x: (width - subtitleWidth) / 2,
-    y: height / 2 - 20,
-    size: subtitleSize,
-    font,
-    color: rgb(0.4, 0.4, 0.4),
-  });
+  if (options.coverImageBytes) {
+    // Cover with image + text overlay
+    let coverImage;
+    try {
+      coverImage = await pdfDoc.embedPng(options.coverImageBytes);
+    } catch {
+      coverImage = await pdfDoc.embedJpg(options.coverImageBytes);
+    }
+
+    const coverMargin = 24;
+    const maxCoverW = width - 2 * coverMargin;
+    const maxCoverH = height - 2 * coverMargin;
+    const coverScale = Math.min(maxCoverW / coverImage.width, maxCoverH / coverImage.height);
+    const drawCoverW = coverImage.width * coverScale;
+    const drawCoverH = coverImage.height * coverScale;
+    const coverX = (width - drawCoverW) / 2;
+    const coverY = (height - drawCoverH) / 2;
+
+    coverPage.drawImage(coverImage, {
+      x: coverX,
+      y: coverY,
+      width: drawCoverW,
+      height: drawCoverH,
+    });
+
+    // Title text overlay near the bottom
+    const titleFontSize = 32;
+    const titleWidth = boldFont.widthOfTextAtSize(title, titleFontSize);
+    const titleX = (width - titleWidth) / 2;
+    const titleY = coverY + 60;
+
+    // Draw white background behind text for readability
+    coverPage.drawRectangle({
+      x: titleX - 12,
+      y: titleY - 10,
+      width: titleWidth + 24,
+      height: 80,
+      color: rgb(1, 1, 1),
+      opacity: 0.85,
+    });
+
+    coverPage.drawText(title, {
+      x: titleX,
+      y: titleY + 30,
+      size: titleFontSize,
+      font: boldFont,
+      color: rgb(0.15, 0.15, 0.15),
+    });
+
+    const subtitle = "A Colouring Book";
+    const subtitleSize = 14;
+    const subtitleWidth = font.widthOfTextAtSize(subtitle, subtitleSize);
+    coverPage.drawText(subtitle, {
+      x: (width - subtitleWidth) / 2,
+      y: titleY,
+      size: subtitleSize,
+      font,
+      color: rgb(0.4, 0.4, 0.4),
+    });
+  } else {
+    // Text-only cover (backwards compatible)
+    const titleFontSize = 36;
+    const titleWidth = boldFont.widthOfTextAtSize(title, titleFontSize);
+    coverPage.drawText(title, {
+      x: (width - titleWidth) / 2,
+      y: height / 2 + 20,
+      size: titleFontSize,
+      font: boldFont,
+      color: rgb(0.15, 0.15, 0.15),
+    });
+
+    const subtitle = "A Colouring Book";
+    const subtitleSize = 16;
+    const subtitleWidth = font.widthOfTextAtSize(subtitle, subtitleSize);
+    coverPage.drawText(subtitle, {
+      x: (width - subtitleWidth) / 2,
+      y: height / 2 - 20,
+      size: subtitleSize,
+      font,
+      color: rgb(0.4, 0.4, 0.4),
+    });
+  }
 
   // Content pages
   for (const page of pages) {

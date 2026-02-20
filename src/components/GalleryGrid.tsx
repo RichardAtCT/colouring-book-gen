@@ -14,6 +14,8 @@ interface Generation {
   ageRange: string;
   quality: string;
   isFavourite: boolean;
+  costUsd: number | null;
+  provider: string;
   createdAt: string;
 }
 
