@@ -44,6 +44,12 @@ export default function RootLayout({
                   >
                     Templates
                   </Link>
+                  <Link
+                    href="/pricing"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Pricing
+                  </Link>
                 </nav>
               </div>
               <AuthButton />
