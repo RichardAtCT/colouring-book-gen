@@ -32,6 +32,12 @@ export default function RootLayout({
                   >
                     Gallery
                   </Link>
+                  <Link
+                    href="/books"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Books
+                  </Link>
                 </nav>
               </div>
               <AuthButton />
