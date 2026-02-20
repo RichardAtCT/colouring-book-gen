@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AgeRangeSelector } from "@/components/AgeRangeSelector";
@@ -10,8 +11,12 @@ import type { AgeRange, GenerateResponse, GenerateError } from "@/types";
 const MAX_PROMPT_LENGTH = 500;
 
 export function GeneratorForm() {
-  const [prompt, setPrompt] = useState("");
-  const [ageRange, setAgeRange] = useState<AgeRange>("5-7");
+  const searchParams = useSearchParams();
+  const initialPrompt = searchParams.get("prompt") ?? "";
+  const initialAgeRange = (searchParams.get("ageRange") ?? "5-7") as AgeRange;
+
+  const [prompt, setPrompt] = useState(initialPrompt);
+  const [ageRange, setAgeRange] = useState<AgeRange>(initialAgeRange);
   const [isLoading, setIsLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users, generations } from "@/lib/db/schema";
 import { buildSystemPrompt } from "@/lib/prompts";
-import { generateImage } from "@/lib/openai";
+import { generateImage } from "@/lib/generate-image";
 import { uploadImage, generateImageKey } from "@/lib/storage";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -112,8 +112,8 @@ export async function POST(request: NextRequest) {
     // Build the full prompt with system instructions
     const fullPrompt = buildSystemPrompt(prompt, ageRange);
 
-    // Generate the image
-    const { imageBase64 } = await generateImage(fullPrompt, quality);
+    // Generate the image (with automatic provider fallback)
+    const { imageBase64, provider, model } = await generateImage(fullPrompt, quality);
 
     const generationId = crypto.randomUUID();
     let imageUrl = `data:image/png;base64,${imageBase64}`;
@@ -141,8 +141,8 @@ export async function POST(request: NextRequest) {
         prompt,
         systemPrompt: fullPrompt,
         ageRange,
-        provider: "openai",
-        model: "gpt-image-1",
+        provider,
+        model,
         quality,
         imageUrl,
         thumbnailUrl,

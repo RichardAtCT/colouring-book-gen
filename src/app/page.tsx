@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import Link from "next/link";
 import { GeneratorForm } from "@/components/GeneratorForm";
 
 export default function Home() {
@@ -9,10 +11,18 @@ export default function Home() {
         </h2>
         <p className="text-muted-foreground">
           Describe a scene and we&apos;ll generate a print-ready colouring page
-          with clean line art.
+          with clean line art.{" "}
+          <Link
+            href="/templates"
+            className="text-foreground underline underline-offset-4"
+          >
+            Or try a template
+          </Link>
         </p>
       </div>
-      <GeneratorForm />
+      <Suspense>
+        <GeneratorForm />
+      </Suspense>
     </div>
   );
 }
