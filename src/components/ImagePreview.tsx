@@ -60,6 +60,13 @@ export function ImagePreview({ imageUrl, isLoading }: ImagePreviewProps) {
     link.click();
   };
 
+  const handlePrint = () => {
+    const w = window.open("");
+    if (!w) return;
+    w.document.write(`<img src="${imageUrl}" onload="window.print();window.close()" style="max-width:100%" />`);
+    w.document.close();
+  };
+
   const handleDownloadPdf = async () => {
     try {
       const blob = await generateSinglePagePdf(imageUrl, "A4");
@@ -90,6 +97,9 @@ export function ImagePreview({ imageUrl, isLoading }: ImagePreviewProps) {
         </Button>
         <Button onClick={handleDownloadPdf} className="flex-1">
           Download PDF
+        </Button>
+        <Button onClick={handlePrint} variant="outline" className="flex-1">
+          Print
         </Button>
       </div>
     </div>

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { generateSinglePagePdf } from "@/lib/pdf-client";
+import { formatCost } from "@/lib/costs";
 
 interface Generation {
   id: string;
@@ -11,6 +12,8 @@ interface Generation {
   ageRange: string;
   quality: string;
   isFavourite: boolean;
+  costUsd: number | null;
+  provider: string;
   createdAt: string;
 }
 
@@ -41,6 +44,13 @@ export function ImageModal({
     link.download = `colouring-page-${generation.id}.png`;
     link.target = "_blank";
     link.click();
+  };
+
+  const handlePrint = () => {
+    const w = window.open("");
+    if (!w) return;
+    w.document.write(`<img src="${generation.imageUrl}" onload="window.print();window.close()" style="max-width:100%" />`);
+    w.document.close();
   };
 
   const handleDownloadPdf = async () => {
@@ -89,6 +99,8 @@ export function ImageModal({
             Age range: {generation.ageRange} &middot; Quality:{" "}
             {generation.quality} &middot;{" "}
             {new Date(generation.createdAt).toLocaleDateString()}
+            {generation.provider && <> &middot; {generation.provider}</>}
+            {generation.costUsd != null && <> &middot; {formatCost(generation.costUsd)}</>}
           </p>
 
           <div className="flex flex-wrap gap-2">
@@ -97,6 +109,9 @@ export function ImageModal({
             </Button>
             <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
               Download PDF
+            </Button>
+            <Button variant="outline" size="sm" onClick={handlePrint}>
+              Print
             </Button>
             <Button variant="outline" size="sm" onClick={onToggleFavourite}>
               {generation.isFavourite ? "Unfavourite" : "Favourite"}
