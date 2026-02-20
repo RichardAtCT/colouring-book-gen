@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import {
   DragDropContext,
   Droppable,
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AgeRangeSelector } from "@/components/AgeRangeSelector";
 import { QualitySelector } from "@/components/QualitySelector";
+import { useAvailableProviders } from "@/hooks/use-available-providers";
 import type {
   AgeRange,
   QualityTier,
@@ -19,6 +20,7 @@ import type {
   BookCoverState,
   PageGenerationStatus,
 } from "@/types";
+import type { Provider } from "@/lib/generate-image";
 import { runWithConcurrency, PAGE_GENERATION_CONCURRENCY } from "@/lib/concurrency";
 import { formatCost } from "@/lib/costs";
 
@@ -31,7 +33,16 @@ export function BookGenerator() {
   const [concept, setConcept] = useState("");
   const [ageRange, setAgeRange] = useState<AgeRange>("5-7");
   const [quality, setQuality] = useState<QualityTier>("low");
+  const { providers, isLoading: providersLoading } = useAvailableProviders();
+  const [provider, setProvider] = useState<Provider>("openai");
   const [pageCount, setPageCount] = useState(10);
+
+  // Auto-select first available provider once loaded
+  useEffect(() => {
+    if (providers.length > 0 && !providers.includes(provider)) {
+      setProvider(providers[0]);
+    }
+  }, [providers, provider]);
   const [bookTitle, setBookTitle] = useState("");
   const [isExpandingPrompts, setIsExpandingPrompts] = useState(false);
   const [expandError, setExpandError] = useState<string | null>(null);
@@ -189,7 +200,8 @@ export function BookGenerator() {
       // Auto-create book and compile
       await createBookAndCompile(coverResult);
     }
-  }, [coverPrompt, pagePrompts, ageRange, quality, updateCoverState, updatePageStates]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coverPrompt, pagePrompts, ageRange, quality, provider, updateCoverState, updatePageStates]);
 
   const generateSingleImage = async (
     prompt: string,
@@ -207,7 +219,7 @@ export function BookGenerator() {
         const response = await fetch("/api/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt, ageRange: age, quality: qual }),
+          body: JSON.stringify({ prompt, ageRange: age, quality: qual, provider }),
         });
 
         if (response.status === 429 && attempt < maxRetries) {
@@ -386,14 +398,68 @@ export function BookGenerator() {
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Quality</label>
-            <QualitySelector
-              value={quality}
-              onChange={setQuality}
-              disabled={isExpandingPrompts}
-            />
-          </div>
+          {providersLoading ? (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Provider</label>
+              <div className="h-10 animate-pulse rounded-md bg-muted" />
+            </div>
+          ) : providers.length === 0 ? (
+            <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+              No API keys configured. Set OPENAI_API_KEY or GEMINI_API_KEY in your environment.
+            </div>
+          ) : providers.length === 1 ? (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Provider</label>
+              <div className="rounded-md border border-input bg-muted px-3 py-2 text-sm font-medium">
+                {providers[0] === "openai" ? "OpenAI" : "Gemini"}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Provider</label>
+              <div className="flex gap-2">
+                {providers.includes("openai") && (
+                  <button
+                    type="button"
+                    onClick={() => setProvider("openai")}
+                    disabled={isExpandingPrompts}
+                    className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                      provider === "openai"
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                    } disabled:opacity-50`}
+                  >
+                    OpenAI
+                  </button>
+                )}
+                {providers.includes("gemini") && (
+                  <button
+                    type="button"
+                    onClick={() => setProvider("gemini")}
+                    disabled={isExpandingPrompts}
+                    className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                      provider === "gemini"
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                    } disabled:opacity-50`}
+                  >
+                    Gemini
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {provider === "openai" && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Quality</label>
+              <QualitySelector
+                value={quality}
+                onChange={setQuality}
+                disabled={isExpandingPrompts}
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <label htmlFor="pageCount" className="text-sm font-medium">
@@ -432,7 +498,7 @@ export function BookGenerator() {
 
           <Button
             type="submit"
-            disabled={concept.trim().length < 3 || isExpandingPrompts}
+            disabled={concept.trim().length < 3 || isExpandingPrompts || providersLoading || providers.length === 0}
             className="w-full"
             size="lg"
           >

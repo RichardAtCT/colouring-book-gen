@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,7 +8,9 @@ import { AgeRangeSelector } from "@/components/AgeRangeSelector";
 import { QualitySelector } from "@/components/QualitySelector";
 import { ImagePreview } from "@/components/ImagePreview";
 import { formatCost } from "@/lib/costs";
+import { useAvailableProviders } from "@/hooks/use-available-providers";
 import type { AgeRange, QualityTier, GenerateResponse, GenerateError } from "@/types";
+import type { Provider } from "@/lib/generate-image";
 
 const MAX_PROMPT_LENGTH = 500;
 
@@ -20,13 +22,21 @@ export function GeneratorForm() {
   const [prompt, setPrompt] = useState(initialPrompt);
   const [ageRange, setAgeRange] = useState<AgeRange>(initialAgeRange);
   const [quality, setQuality] = useState<QualityTier>("low");
-  const [provider, setProvider] = useState<"openai" | "gemini">("openai");
+  const { providers, isLoading: providersLoading } = useAvailableProviders();
+  const [provider, setProvider] = useState<Provider>("openai");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Auto-select first available provider once loaded
+  useEffect(() => {
+    if (providers.length > 0 && !providers.includes(provider)) {
+      setProvider(providers[0]);
+    }
+  }, [providers, provider]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [costUsd, setCostUsd] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const canSubmit = prompt.trim().length >= 3 && !isLoading;
+  const canSubmit = prompt.trim().length >= 3 && !isLoading && !providersLoading && providers.length > 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,35 +100,57 @@ export function GeneratorForm() {
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Provider</label>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setProvider("openai")}
-            disabled={isLoading}
-            className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
-              provider === "openai"
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
-            } disabled:opacity-50`}
-          >
-            OpenAI
-          </button>
-          <button
-            type="button"
-            onClick={() => setProvider("gemini")}
-            disabled={isLoading}
-            className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
-              provider === "gemini"
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
-            } disabled:opacity-50`}
-          >
-            Gemini
-          </button>
+      {providersLoading ? (
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Provider</label>
+          <div className="h-10 animate-pulse rounded-md bg-muted" />
         </div>
-      </div>
+      ) : providers.length === 0 ? (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+          No API keys configured. Set OPENAI_API_KEY or GEMINI_API_KEY in your environment.
+        </div>
+      ) : providers.length === 1 ? (
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Provider</label>
+          <div className="rounded-md border border-input bg-muted px-3 py-2 text-sm font-medium">
+            {providers[0] === "openai" ? "OpenAI" : "Gemini"}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Provider</label>
+          <div className="flex gap-2">
+            {providers.includes("openai") && (
+              <button
+                type="button"
+                onClick={() => setProvider("openai")}
+                disabled={isLoading}
+                className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                  provider === "openai"
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                } disabled:opacity-50`}
+              >
+                OpenAI
+              </button>
+            )}
+            {providers.includes("gemini") && (
+              <button
+                type="button"
+                onClick={() => setProvider("gemini")}
+                disabled={isLoading}
+                className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                  provider === "gemini"
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                } disabled:opacity-50`}
+              >
+                Gemini
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {provider === "openai" && (
         <div className="space-y-2">

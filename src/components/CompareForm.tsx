@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AgeRangeSelector } from "@/components/AgeRangeSelector";
 import { formatCost } from "@/lib/costs";
+import { useAvailableProviders } from "@/hooks/use-available-providers";
 import type { AgeRange, QualityTier } from "@/types";
 
 const MAX_PROMPT_LENGTH = 500;
@@ -36,9 +37,11 @@ export function CompareForm() {
   const [ageRange, setAgeRange] = useState<AgeRange>("5-7");
   const [results, setResults] =
     useState<Record<QualityTier, TierResult>>(INITIAL_RESULTS);
+  const { providers, isLoading: providersLoading } = useAvailableProviders();
+  const openaiAvailable = providers.includes("openai");
 
   const isLoading = Object.values(results).some((r) => r.status === "loading");
-  const canSubmit = prompt.trim().length >= 3 && !isLoading;
+  const canSubmit = prompt.trim().length >= 3 && !isLoading && openaiAvailable;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,6 +116,12 @@ export function CompareForm() {
           disabled={isLoading}
         />
       </div>
+
+      {!providersLoading && !openaiAvailable && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+          Quality comparison requires an OpenAI API key. Set OPENAI_API_KEY in your environment.
+        </div>
+      )}
 
       <Button type="submit" disabled={!canSubmit} className="w-full" size="lg">
         {isLoading ? "Generating 3 images..." : "Compare All Qualities"}
