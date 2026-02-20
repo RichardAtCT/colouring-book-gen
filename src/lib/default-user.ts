@@ -16,11 +16,14 @@ export async function getDefaultUserId(): Promise<string> {
     .limit(1);
 
   if (!existing[0]) {
-    await db.insert(users).values({
-      id: DEFAULT_USER_ID,
-      email: "local@localhost",
-      name: "Local User",
-    });
+    await db
+      .insert(users)
+      .values({
+        id: DEFAULT_USER_ID,
+        email: "local@localhost",
+        name: "Local User",
+      })
+      .onConflictDoNothing();
   }
 
   cached = true;
