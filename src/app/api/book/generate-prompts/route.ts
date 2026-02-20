@@ -13,7 +13,14 @@ const schema = z.object({
   pageCount: z.number().int().min(5).max(20),
 });
 
-const openai = new OpenAI();
+let _openai: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!_openai) {
+    _openai = new OpenAI();
+  }
+  return _openai;
+}
 
 export async function POST(request: NextRequest) {
   await getDefaultUserId();
@@ -37,7 +44,7 @@ export async function POST(request: NextRequest) {
   };
 
   try {
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       response_format: { type: "json_object" },
       messages: [

@@ -2,7 +2,18 @@ import OpenAI from "openai";
 import type { QualityTier } from "@/types";
 import type { TokenUsage } from "./costs";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let _openai: OpenAI | null = null;
+
+function getClient(): OpenAI {
+  if (!_openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error("OPENAI_API_KEY environment variable is not set");
+    }
+    _openai = new OpenAI({ apiKey });
+  }
+  return _openai;
+}
 
 const MODEL_FOR_QUALITY: Record<QualityTier, string> = {
   low: "gpt-image-1-mini",
@@ -15,6 +26,8 @@ export async function generateImage(
   quality: QualityTier
 ): Promise<{ imageBase64: string; model: string; usage: TokenUsage | null }> {
   const model = MODEL_FOR_QUALITY[quality];
+
+  const openai = getClient();
 
   const response = await openai.images.generate({
     model,
