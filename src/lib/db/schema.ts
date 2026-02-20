@@ -17,7 +17,7 @@ export const generations = sqliteTable("generations", {
   prompt: text("prompt").notNull(),
   systemPrompt: text("system_prompt").notNull(),
   ageRange: text("age_range", { enum: ["2-4", "5-7", "8-12"] }).notNull(),
-  provider: text("provider", { enum: ["openai"] }).notNull(),
+  provider: text("provider", { enum: ["openai", "gemini"] }).notNull(),
   model: text("model").notNull(),
   quality: text("quality", { enum: ["low", "medium", "high"] })
     .default("low")

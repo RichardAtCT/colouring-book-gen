@@ -27,6 +27,16 @@ const IMAGE_MODEL_PRICING: Record<string, ModelPricing> = {
   },
 };
 
+// Gemini image generation uses a flat token cost per image (1290 output tokens).
+// We approximate this as a fixed cost since we don't get granular token usage back.
+const GEMINI_FIXED_COSTS: Record<string, number> = {
+  "gemini-2.5-flash-image": 0.005, // ~1290 output tokens at flash rates
+};
+
+export function getGeminiFixedCost(model: string): number {
+  return GEMINI_FIXED_COSTS[model] ?? 0;
+}
+
 const CHAT_MODEL_PRICING: Record<string, ModelPricing> = {
   "gpt-4o-mini": {
     inputPerMillion: 0.15,

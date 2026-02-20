@@ -61,7 +61,7 @@ export function ImagePreview({ imageUrl, isLoading }: ImagePreviewProps) {
   };
 
   const handlePrint = () => {
-    const w = window.open("");
+    const w = window.open("about:blank");
     if (!w) return;
     w.document.write(`<img src="${imageUrl}" onload="window.print();window.close()" style="max-width:100%" />`);
     w.document.close();

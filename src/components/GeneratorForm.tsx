@@ -20,6 +20,7 @@ export function GeneratorForm() {
   const [prompt, setPrompt] = useState(initialPrompt);
   const [ageRange, setAgeRange] = useState<AgeRange>(initialAgeRange);
   const [quality, setQuality] = useState<QualityTier>("low");
+  const [provider, setProvider] = useState<"openai" | "gemini">("openai");
   const [isLoading, setIsLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [costUsd, setCostUsd] = useState<number | null>(null);
@@ -40,7 +41,7 @@ export function GeneratorForm() {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: prompt.trim(), ageRange, quality }),
+        body: JSON.stringify({ prompt: prompt.trim(), ageRange, quality, provider }),
       });
 
       const data: GenerateResponse | GenerateError = await response.json();
@@ -90,13 +91,45 @@ export function GeneratorForm() {
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Quality</label>
-        <QualitySelector
-          value={quality}
-          onChange={setQuality}
-          disabled={isLoading}
-        />
+        <label className="text-sm font-medium">Provider</label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setProvider("openai")}
+            disabled={isLoading}
+            className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+              provider === "openai"
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
+            } disabled:opacity-50`}
+          >
+            OpenAI
+          </button>
+          <button
+            type="button"
+            onClick={() => setProvider("gemini")}
+            disabled={isLoading}
+            className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+              provider === "gemini"
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
+            } disabled:opacity-50`}
+          >
+            Gemini
+          </button>
+        </div>
       </div>
+
+      {provider === "openai" && (
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Quality</label>
+          <QualitySelector
+            value={quality}
+            onChange={setQuality}
+            disabled={isLoading}
+          />
+        </div>
+      )}
 
       <Button type="submit" disabled={!canSubmit} className="w-full" size="lg">
         {isLoading ? (

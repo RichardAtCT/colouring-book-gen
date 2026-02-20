@@ -12,6 +12,7 @@
     "db:seed": "tsx src/lib/db/seed.ts"
   },
   "dependencies": {
+    "@google/genai": "^1.42.0",
     "@hello-pangea/dnd": "^18.0.1",
     "@libsql/client": "^0.17.0",
     "class-variance-authority": "^0.7.1",

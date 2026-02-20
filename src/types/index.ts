@@ -6,6 +6,7 @@ export interface GenerateRequest {
   prompt: string;
   ageRange: AgeRange;
   quality: QualityTier;
+  provider?: "openai" | "gemini";
 }
 
 export interface GenerateResponse {

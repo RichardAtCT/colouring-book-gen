@@ -6,7 +6,7 @@ import { buildSystemPrompt } from "@/lib/prompts";
 import { generateImage } from "@/lib/generate-image";
 import { uploadImage, generateImageKey } from "@/lib/storage";
 import { getDefaultUserId } from "@/lib/default-user";
-import { calculateImageCost } from "@/lib/costs";
+import { calculateImageCost, getGeminiFixedCost } from "@/lib/costs";
 
 const generateSchema = z.object({
   prompt: z
@@ -15,6 +15,7 @@ const generateSchema = z.object({
     .max(500, "Prompt must be under 500 characters"),
   ageRange: z.enum(["2-4", "5-7", "8-12"]),
   quality: z.enum(["low", "medium", "high"]).default("low"),
+  provider: z.enum(["openai", "gemini"]).default("openai"),
 });
 
 export async function POST(request: NextRequest) {
@@ -35,14 +36,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { prompt, ageRange, quality } = parsed.data;
+    const { prompt, ageRange, quality, provider } = parsed.data;
 
     // Build the full prompt with system instructions
     const fullPrompt = buildSystemPrompt(prompt, ageRange);
 
     // Generate the image (with automatic provider fallback)
     const generationStart = Date.now();
-    const { imageBase64, provider, model, usage } = await generateImage(fullPrompt, quality);
+    const { imageBase64, provider: usedProvider, model, usage } = await generateImage(fullPrompt, quality, provider);
     const durationMs = Date.now() - generationStart;
 
     const generationId = crypto.randomUUID();
@@ -61,8 +62,10 @@ export async function POST(request: NextRequest) {
       imageUrl = `data:image/png;base64,${imageBase64}`;
     }
 
-    // Compute cost from actual token usage when available
-    const costUsd = usage ? calculateImageCost(model, usage) : 0;
+    // Compute cost from actual token usage when available, or use fixed cost for Gemini
+    const costUsd = usage
+      ? calculateImageCost(model, usage)
+      : getGeminiFixedCost(model);
 
     // Save generation record
     await db.insert(generations).values({
@@ -71,7 +74,7 @@ export async function POST(request: NextRequest) {
       prompt,
       systemPrompt: fullPrompt,
       ageRange,
-      provider,
+      provider: usedProvider,
       model,
       quality,
       imageUrl,
