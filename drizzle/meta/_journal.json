@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1771568068736,
+      "tag": "0000_messy_stepford_cuckoos",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1771568265407,
+      "tag": "0001_fearless_phantom_reporter",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1771568318109,
+      "tag": "0002_red_namora",
+      "breakpoints": true
+    }
+  ]
+}

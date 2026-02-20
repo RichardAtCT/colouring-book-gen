@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { Providers } from "@/components/Providers";
+import { AuthButton } from "@/components/AuthButton";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,12 +18,27 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <header className="border-b">
-          <div className="mx-auto flex h-14 max-w-3xl items-center px-4">
-            <h1 className="text-lg font-semibold">Colouring Book Generator</h1>
-          </div>
-        </header>
-        <main className="mx-auto max-w-3xl px-4 py-8">{children}</main>
+        <Providers>
+          <header className="border-b">
+            <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
+              <div className="flex items-center gap-6">
+                <Link href="/" className="text-lg font-semibold">
+                  Colouring Book Generator
+                </Link>
+                <nav className="flex items-center gap-4 text-sm">
+                  <Link
+                    href="/gallery"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Gallery
+                  </Link>
+                </nav>
+              </div>
+              <AuthButton />
+            </div>
+          </header>
+          <main className="mx-auto max-w-3xl px-4 py-8">{children}</main>
+        </Providers>
       </body>
     </html>
   );
