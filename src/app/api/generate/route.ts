@@ -16,6 +16,7 @@ const generateSchema = z.object({
   ageRange: z.enum(["2-4", "5-7", "8-12"]),
   quality: z.enum(["low", "medium", "high"]).default("low"),
   provider: z.enum(["openai", "gemini"]).default("openai"),
+  systemPromptOverride: z.string().max(5000).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -36,10 +37,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { prompt, ageRange, quality, provider } = parsed.data;
+    const { prompt, ageRange, quality, provider, systemPromptOverride } = parsed.data;
 
-    // Build the full prompt with system instructions
-    const fullPrompt = buildSystemPrompt(prompt, ageRange);
+    // Build the full prompt with system instructions (or use override from prompt lab)
+    const fullPrompt = systemPromptOverride ?? buildSystemPrompt(prompt, ageRange);
 
     // Generate the image (with automatic provider fallback)
     const generationStart = Date.now();
