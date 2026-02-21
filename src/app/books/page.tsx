@@ -35,7 +35,7 @@ export default function BooksPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold tracking-tight">My Books</h2>
+          <h2 className="font-display text-2xl font-bold tracking-tight">My Books</h2>
           <p className="text-muted-foreground">
             Your compiled colouring books.
           </p>
@@ -48,24 +48,41 @@ export default function BooksPage() {
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading...</p>
       ) : books.length === 0 ? (
-        <Card className="p-8 text-center">
+        <div className="flex flex-col items-center gap-4 py-16">
+          <span className="text-5xl">{"\uD83D\uDCD6"}</span>
+          <h3 className="font-display text-xl font-bold text-foreground">
+            No books yet
+          </h3>
           <p className="text-muted-foreground">
-            No books yet. Create your first colouring book!
+            Create your first colouring book!
           </p>
-          <Button asChild className="mt-4">
+          <Button asChild>
             <Link href="/book/new">Create a Book</Link>
           </Button>
-        </Card>
+        </div>
       ) : (
         <div className="space-y-3">
           {books.map((book) => (
-            <Card key={book.id} className="flex items-center justify-between p-4">
-              <div>
-                <h3 className="font-medium">{book.title}</h3>
-                <p className="text-xs text-muted-foreground">
-                  {book.status === "compiled" ? "Compiled" : "Draft"} &middot;{" "}
-                  {new Date(book.updatedAt).toLocaleDateString()}
-                </p>
+            <Card
+              key={book.id}
+              className="flex items-center justify-between p-4 transition-all hover:-translate-y-0.5 hover:shadow-lg"
+            >
+              <div className="flex items-center gap-3">
+                <div>
+                  <h3 className="font-medium">{book.title}</h3>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                        book.status === "compiled"
+                          ? "bg-accent/20 text-accent-foreground"
+                          : "bg-secondary text-secondary-foreground"
+                      }`}
+                    >
+                      {book.status === "compiled" ? "Compiled" : "Draft"}
+                    </span>
+                    <span>{new Date(book.updatedAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
               </div>
               <div className="flex gap-2">
                 {book.pdfUrl && (

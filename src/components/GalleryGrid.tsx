@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -81,7 +82,7 @@ export function GalleryGrid() {
     return (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="aspect-square rounded-lg" />
+          <Skeleton key={i} className="aspect-square rounded-xl" />
         ))}
       </div>
     );
@@ -89,12 +90,23 @@ export function GalleryGrid() {
 
   if (generations.length === 0) {
     return (
-      <div className="py-12 text-center">
+      <div className="flex flex-col items-center gap-4 py-16">
+        <span className="text-5xl">
+          {favouritesOnly ? "\u2764\uFE0F" : "\uD83C\uDFA8"}
+        </span>
+        <h3 className="font-display text-xl font-bold text-foreground">
+          {favouritesOnly ? "No favourites yet" : "No creations yet"}
+        </h3>
         <p className="text-muted-foreground">
           {favouritesOnly
-            ? "No favourites yet. Heart a generation to save it here."
-            : "No generations yet. Create your first colouring page!"}
+            ? "Heart a generation to save it here."
+            : "Create your first colouring page to get started!"}
         </p>
+        {!favouritesOnly && (
+          <Button asChild>
+            <Link href="/">Create a Page</Link>
+          </Button>
+        )}
       </div>
     );
   }
@@ -102,33 +114,41 @@ export function GalleryGrid() {
   return (
     <>
       <div className="mb-4 flex gap-2">
-        <Button
-          variant={favouritesOnly ? "outline" : "default"}
-          size="sm"
+        <button
+          type="button"
           onClick={() => {
             setFavouritesOnly(false);
             setPage(1);
           }}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            !favouritesOnly
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+          }`}
         >
           All
-        </Button>
-        <Button
-          variant={favouritesOnly ? "default" : "outline"}
-          size="sm"
+        </button>
+        <button
+          type="button"
           onClick={() => {
             setFavouritesOnly(true);
             setPage(1);
           }}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            favouritesOnly
+              ? "bg-chart-4 text-white"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+          }`}
         >
           Favourites
-        </Button>
+        </button>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         {generations.map((gen) => (
           <Card
             key={gen.id}
-            className="group relative cursor-pointer overflow-hidden"
+            className="group relative cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"
             onClick={() => setSelectedGeneration(gen)}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -145,7 +165,7 @@ export function GalleryGrid() {
                 toggleFavourite(gen.id, gen.isFavourite);
               }}
             >
-              {gen.isFavourite ? "\u2764\uFE0F" : "\u{1F90D}"}
+              {gen.isFavourite ? "\u2764\uFE0F" : "\uD83E\uDD0D"}
             </button>
           </Card>
         ))}

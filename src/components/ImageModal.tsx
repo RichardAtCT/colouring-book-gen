@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateSinglePagePdf } from "@/lib/pdf-client";
 import { formatCost } from "@/lib/costs";
@@ -69,19 +70,19 @@ export function ImageModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-background p-4 shadow-xl"
+        className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border-t-4 border-primary bg-background p-4 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
-          className="absolute top-2 right-2 rounded-full bg-muted p-2 text-sm"
+          className="absolute top-3 right-3 rounded-full bg-muted p-1.5 text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
           onClick={onClose}
         >
-          &#x2715;
+          <X className="h-4 w-4" />
         </button>
 
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -107,7 +108,7 @@ export function ImageModal({
             <Button variant="outline" size="sm" onClick={handleDownloadPng}>
               Download PNG
             </Button>
-            <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
+            <Button size="sm" onClick={handleDownloadPdf}>
               Download PDF
             </Button>
             <Button variant="outline" size="sm" onClick={handlePrint}>

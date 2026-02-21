@@ -258,7 +258,7 @@ export function BookEditor({ bookId }: BookEditorProps) {
                       className="h-full w-full object-cover"
                     />
                     {selectedIds.has(gen.id) && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-primary/20">
+                      <div className="absolute inset-0 flex items-center justify-center bg-primary/30 backdrop-blur-[1px]">
                         <span className="text-lg">&#x2713;</span>
                       </div>
                     )}
@@ -300,8 +300,8 @@ export function BookEditor({ bookId }: BookEditorProps) {
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          className={`relative flex-shrink-0 ${
-                            snapshot.isDragging ? "opacity-80" : ""
+                          className={`relative flex-shrink-0 transition-transform ${
+                            snapshot.isDragging ? "scale-105 rotate-1 shadow-xl" : ""
                           }`}
                         >
                           <Card className="w-24 overflow-hidden">

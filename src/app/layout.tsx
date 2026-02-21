@@ -1,9 +1,24 @@
 import type { Metadata } from "next";
+import { Fredoka, Nunito } from "next/font/google";
+import { Providers } from "@/components/Providers";
+import { NavLinks } from "@/components/NavLinks";
 import Link from "next/link";
 import "./globals.css";
 
+const fredoka = Fredoka({
+  subsets: ["latin"],
+  variable: "--font-heading",
+  display: "swap",
+});
+
+const nunito = Nunito({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Colouring Book Generator",
+  title: "Crayon Magic - Colouring Book Generator",
   description:
     "Generate custom children's colouring book pages with AI. Type a description and get print-ready line art in seconds.",
 };
@@ -14,50 +29,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning className={`${fredoka.variable} ${nunito.variable}`}>
       <body className="antialiased">
-        <header className="border-b">
-          <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
-            <div className="flex items-center gap-6">
-              <Link href="/" className="text-lg font-semibold">
-                Colouring Book Generator
-              </Link>
-              <nav className="flex items-center gap-4 text-sm">
-                <Link
-                  href="/gallery"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Gallery
+        <Providers>
+          <header className="sticky top-0 z-40 border-b bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 backdrop-blur-sm">
+            <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+              <div className="flex items-center gap-6">
+                <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
+                  <span className="text-xl">🖍️</span>
+                  <span className="bg-gradient-to-r from-primary via-chart-4 to-accent bg-clip-text font-display font-bold text-transparent">
+                    Crayon Magic
+                  </span>
                 </Link>
-                <Link
-                  href="/books"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Books
-                </Link>
-                <Link
-                  href="/book/generate"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Generate Book
-                </Link>
-                <Link
-                  href="/templates"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Templates
-                </Link>
-                <Link
-                  href="/compare"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Compare
-                </Link>
-              </nav>
+                <NavLinks />
+              </div>
             </div>
-          </div>
-        </header>
-        <main className="mx-auto max-w-3xl px-4 py-8">{children}</main>
+          </header>
+          <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+        </Providers>
       </body>
     </html>
   );

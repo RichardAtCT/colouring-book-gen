@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AgeRangeSelector } from "@/components/AgeRangeSelector";
 import { QualitySelector } from "@/components/QualitySelector";
+import { Spinner } from "@/components/Spinner";
 import { useAvailableProviders } from "@/hooks/use-available-providers";
 import type {
   AgeRange,
@@ -25,6 +26,52 @@ import { runWithConcurrency, PAGE_GENERATION_CONCURRENCY } from "@/lib/concurren
 import { formatCost } from "@/lib/costs";
 
 type Step = "concept" | "prompts" | "generating" | "complete";
+
+const STEPS: { key: Step; label: string; color: string }[] = [
+  { key: "concept", label: "Concept", color: "bg-primary" },
+  { key: "prompts", label: "Review", color: "bg-secondary" },
+  { key: "generating", label: "Generating", color: "bg-chart-3" },
+  { key: "complete", label: "Complete", color: "bg-accent" },
+];
+
+function StepIndicator({ current }: { current: Step }) {
+  const currentIdx = STEPS.findIndex((s) => s.key === current);
+  return (
+    <div className="flex items-center justify-center gap-1 mb-8">
+      {STEPS.map((step, i) => {
+        const isActive = i === currentIdx;
+        const isDone = i < currentIdx;
+        return (
+          <div key={step.key} className="flex items-center">
+            <div className="flex flex-col items-center">
+              <div
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all ${
+                  isActive
+                    ? `${step.color} text-white scale-110 shadow-md`
+                    : isDone
+                      ? "bg-accent text-accent-foreground"
+                      : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {isDone ? "\u2713" : i + 1}
+              </div>
+              <span className={`mt-1 text-[10px] font-medium ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
+                {step.label}
+              </span>
+            </div>
+            {i < STEPS.length - 1 && (
+              <div
+                className={`mx-1 mb-4 h-0.5 w-8 rounded-full transition-colors ${
+                  i < currentIdx ? "bg-accent" : "bg-muted"
+                }`}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export function BookGenerator() {
   const [step, setStep] = useState<Step>("concept");
@@ -368,6 +415,8 @@ export function BookGenerator() {
 
   return (
     <div className="space-y-8">
+      <StepIndicator current={step} />
+
       {/* Step: Concept */}
       {step === "concept" && (
         <form onSubmit={handleExpandPrompts} className="space-y-6">
@@ -524,7 +573,7 @@ export function BookGenerator() {
       {step === "prompts" && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">
+            <h2 className="font-display text-lg font-semibold">
               Review & Edit Pages
             </h2>
             <span className="text-sm text-muted-foreground">
@@ -641,7 +690,7 @@ export function BookGenerator() {
         <div className="space-y-6">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">
+              <h2 className="font-display text-lg font-semibold">
                 {isCompiling
                   ? "Compiling PDF..."
                   : allDone
@@ -708,7 +757,12 @@ export function BookGenerator() {
       {/* Step: Complete */}
       {step === "complete" && (
         <div className="space-y-6">
-          <h2 className="text-lg font-semibold">Your book is ready!</h2>
+          <div className="flex flex-col items-center gap-2 text-center">
+            <span className="animate-bounce text-4xl">{"\uD83C\uDF89"}</span>
+            <h2 className="font-display text-2xl font-bold text-primary">
+              Your book is ready!
+            </h2>
+          </div>
 
           {/* Thumbnail grid */}
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
@@ -819,34 +873,14 @@ function GenerationItem({
 function StatusBadge({ status }: { status: PageGenerationStatus }) {
   const styles = {
     pending: "bg-muted text-muted-foreground",
-    generating: "bg-blue-100 text-blue-700",
-    done: "bg-green-100 text-green-700",
-    failed: "bg-red-100 text-red-700",
+    generating: "bg-primary/15 text-primary",
+    done: "bg-accent/20 text-accent-foreground",
+    failed: "bg-destructive/15 text-destructive",
   };
   const labels = { pending: "...", generating: "...", done: "\u2713", failed: "\u2717" };
   return (
     <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${styles[status]}`}>
       {labels[status]}
     </span>
-  );
-}
-
-function Spinner() {
-  return (
-    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-      />
-    </svg>
   );
 }
